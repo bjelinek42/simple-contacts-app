@@ -5,9 +5,9 @@ export default {
     return {
       message: "Welcome to Contacts!",
       contacts: [],
-      newContactParams: {},
+      newContact: {},
       currentContact: {},
-      updateContactParams: {}
+      editContactParams: {}
     };
   },
   created: function () {
@@ -15,29 +15,34 @@ export default {
   },
   methods: {
     indexContacts: function () {
-      console.log("getting contacts")
       axios.get("/contacts").then(response => {
-        console.log(response.data)
-        this.contacts = response.data
+        console.log("finding contacts", response.data),
+          this.contacts = response.data
       })
     },
     createContact: function () {
-      axios.post("/contacts", this.newContactParams).then(response => {
-        console.log("making contact", response);
+      axios.post("/contacts", this.newContact).then(response => {
+        console.log("creating contact", response)
         this.contacts.push(response.data)
-        this.newContactParams = {}
       })
     },
     showContact: function (contact) {
-      this.currentContact = contact
+      this.currentContact = contact;
+      this.editContactParams = contact;
       document.querySelector("#contact-details").showModal();
     },
     updateContact: function (contact) {
-      axios.patch(`/contacts/${contact.id}`).then(response => {
+      axios.patch(`/contacts/${contact.id}`, this.editContactParams).then(response => {
         console.log("updating contact", response);
+        this.currentContact = {};
+      })
+    },
+    destroyContact: function (contact) {
+      axios.delete(`/contacts/${contact.id}`).then(response => {
+        console.log("deleted contact", response)
       })
     }
-  },
+  }
 };
 </script>
 
@@ -45,63 +50,55 @@ export default {
   <div class="home">
     <h1>{{ message }}</h1>
     <div v-for="contact in contacts" v-bind:key="contact.id">
-      <p>Name: {{ contact.first_name }} {{ contact.last_name }} phone: {{ contact.phone_number }} email: {{ contact.email }}</p>
-      <button v-on:click="showContact(contact)">More info</button>
+      <p>Name: {{ contact.first_name }} {{ contact.last_name }}</p>
+      <button v-on:click="showContact(contact)">More Information</button>
+      <dialog id="contact-details">
+        <form method="dialog">
+          <p>First Name: {{ currentContact.first_name }}</p>
+          <p>Last Name: {{ currentContact.last_name }}</p>
+          <p>Email: {{ currentContact.email }}</p>
+          <p>Phone Number: {{ currentContact.phone_number }}</p>
+          <p>Edit Contact</p>
+          <p>
+            First Name:
+            <input type="text" v-model="editContactParams.first_name" />
+          </p>
+          <p>
+            Last Name:
+            <input type="text" v-model="editContactParams.last_name" />
+          </p>
+          <p>
+            Email:
+            <input type="text" v-model="editContactParams.email" />
+          </p>
+          <p>
+            Phone Number:
+            <input type="text" v-model="editContactParams.phone_number" />
+          </p>
+          <button v-on:click="updateContact(currentContact)">Update</button>
+          <button v-on:click="destroyContact(currentContact)">Delete</button>
+          <button>Close</button>
+        </form>
+      </dialog>
     </div>
-    <dialog id="contact-details">
-      <form method="dialog">
-        <h1>Contact Info</h1>
-        <p>First Name: {{ currentContact.first_name }}</p>
-        <p>Last Name: {{ currentContact.last_name }}</p>
-        <p>Email: {{ currentContact.email }}</p>
-        <p>Phone: {{ currentContact.phone_number }}</p>
-        <p>{{ currentContact.image }}</p>
-        <p>
-          First Name:
-          <input type="text" v-model="updateContactParams.first_name" />
-        </p>
-        <p>
-          Last Name:
-          <input type="text" v-model="updateContactParams.last_name" />
-        </p>
-        <p>
-          Email:
-          <input type="text" v-model="updateContactParams.email" />
-        </p>
-        <p>
-          Phone:
-          <input type="text" v-model="updateContactParams.phone_number" />
-        </p>
-        <p>
-          Image:
-          <input type="text" v-model="updateContactParams.image" />
-        </p>
-        <button v-on:click="updateContact(currentContact)">Update</button>
-        <button>Close</button>
-      </form>
-    </dialog>
-    <p>Add Contact:</p>
+    <p>Create New Contact</p>
     <p>
       First Name:
-      <input type="text" v-model="newContactParams.first_name" />
+      <input type="text" v-model="newContact.first_name" />
     </p>
     <p>
       Last Name:
-      <input type="text" v-model="newContactParams.last_name" />
+      <input type="text" v-model="newContact.last_name" />
     </p>
     <p>
-      Email:
-      <input type="text" v-model="newContactParams.email" />
+      Phone Number:
+      <input type="text" v-model="newContact.phone_number" />
     </p>
     <p>
-      Phone:
-      <input type="text" v-model="newContactParams.phone_number" />
+      email:
+      <input type="text" v-model="newContact.email" />
     </p>
-    <p>
-      Image:
-      <input type="text" v-model="newContactParams.image" />
-    </p>
-    <button v-on:click="createContact()">Create Contact</button>
+    <button v-on:click="createContact()">Create</button>
   </div>
 </template>
 
