@@ -7,7 +7,8 @@ export default {
       contacts: [],
       newContactParams: {},
       currentContact: {},
-      editContactParams: {}
+      editContactParams: {},
+      errors: []
     };
   },
   created: function () {
@@ -22,10 +23,14 @@ export default {
     },
     createContact: function () {
       axios.post(`/contacts`, this.newContactParams).then(response => {
-        console.log('creating contact', response)
-        this.contacts.push(response.data)
-        this.newContactParams = {}
+        console.log('creating contact', response);
+        this.contacts.push(response.data);
+        this.newContactParams = {};
       })
+        .catch(error => {
+          console.log("there was a problem with creating contact", error.response);
+          this.errors = error.response.data.errors
+        });
     },
     showContact: function (contact) {
       this.currentContact = contact;
@@ -37,6 +42,10 @@ export default {
         console.log("updating contact", response),
           this.currentContact = {};
       })
+        .catch(error => {
+          console.log("there was a problem with updating contact", error.response);
+          this.errors = error.response.data.errors
+        });
     },
     destroyContact: function (contact) {
       axios.delete(`/contacts/${contact.id}`).then(response => {
@@ -52,6 +61,9 @@ export default {
 <template>
   <div class="home">
     <h1>{{ message }}</h1>
+    <div v-for="error in errors" v-bind:key="error">
+      <p>{{ error }}</p>
+    </div>
     <div v-for="contact in contacts" v-bind:key="contact.id">
       <p>{{ contact.first_name }} {{ contact.last_name }}</p>
       <button v-on:click="showContact(contact)">More Info</button>
